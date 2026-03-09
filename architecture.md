@@ -198,12 +198,22 @@ The `t` prefix indicates threading enabled (e.g., `ta6le` = threaded x86-64 Linu
 
 ## Test Infrastructure (`mats/`)
 
+The framework is called **mat** — an internal Cisco name dating to 1984, evoking "test material" or a "test matrix" (each file is run across a matrix of configurations). The file extensions mirror Chez Scheme's own source/object convention:
+
+| Extension | Meaning |
+|-----------|---------|
+| `.ms` | **m**at **s**ource (analogous to `.ss` for Scheme source) |
+| `.mo` | **m**at **o**bject — compiled output with pass/fail results (analogous to `.so`) |
+
+The `(mat name clause ...)` form is a macro defined in `mats/mat.ss`. It expands to a call to `mat-run`, which evaluates each clause and expects it to return `#t`. Special clause forms `(error? expr)` and `(warning? expr)` assert that evaluation raises an exception. A `(parameters [param val ...] ...)` clause runs the whole test body under every combination of parameter values. Failures are reported as `"Bug in mat <name> clause <n>"` in the `.mo` output file.
+
 - 94 test suite files (`*.ms`), organized by language chapter and topic.
 - Tests are compiled to `.mo` files and run under multiple configurations:
   - Optimization levels: `o=0` (safe) through `o=3` (unsafe)
   - With/without cp0 (`cp0=t`)
   - Interpreter mode (`eval=interpret`)
   - Primitive inlining suppressed (`spi=t`)
+- Expected exception messages are stored in `mats/root-experr*` files and compared against `.mo` output.
 - C helper files (`foreign1.c`, `foreign2.c`) support FFI tests.
 - Run with `make test` (supports `-j N` for parallel execution via Zuo).
 
